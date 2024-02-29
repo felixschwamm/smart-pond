@@ -37,6 +37,11 @@ module "api_gateway" {
       payload_format_version = "2.0"
       timeout_milliseconds   = 30000
     }
+    "GET /data"  = {
+      lambda_arn             = aws_lambda_function.get_data_function.arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 30000
+    }
   }
 
 }
@@ -83,10 +88,33 @@ resource "aws_lambda_function" "post_data_function" {
   }
 }
 
+resource "aws_lambda_function" "get_data_function" {
+  function_name    = "${var.project_name}-get-data"
+  handler          = "dist/index.getData"
+  runtime          = "nodejs18.x"
+  filename         = "function.zip"
+  source_code_hash = filebase64sha256("function.zip")
+  role             = aws_iam_role.role.arn
+  memory_size      = 256
+  environment {
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.table.name
+    }
+  }
+}
+
 resource "aws_lambda_permission" "post_data_function_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.post_data_function.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${module.api_gateway.apigatewayv2_api_execution_arn}/*"
+}
+
+resource "aws_lambda_permission" "get_data_function_permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_data_function.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${module.api_gateway.apigatewayv2_api_execution_arn}/*"
 }

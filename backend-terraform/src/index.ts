@@ -2,6 +2,7 @@ import { AttributeValue, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { BatchGetCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import Joi from "joi";
 import { APIGatewayEvent, EventBridgeEvent } from "aws-lambda";
+import { getPKs } from "./util";
 
 const client = new DynamoDBClient({ region: "eu-central-1" });
 const docClient = DynamoDBDocumentClient.from(client);
@@ -18,6 +19,12 @@ type DataPoint = {
 const aggregateDataEventSchema = Joi.object({
     period: Joi.string().valid("MONTH", "YEAR", "WEEK").required(),
     seconds: Joi.number().required()
+}).unknown(true);
+
+const getValuesEventSchema = Joi.object({
+    period: Joi.string().valid("MONTH", "YEAR", "WEEK", "DAY").required(),
+    from: Joi.number().required(),
+    to: Joi.number().required()
 }).unknown(true);
 
 type AggregatedData = { [key: string]: number };
@@ -85,6 +92,22 @@ function getDatesBetween(startDate: Date, endDate: Date): string[] {
     }
 
     return dateArray;
+}
+
+async function getData(event: APIGatewayEvent) {
+    const { error } = getValuesEventSchema.validate(event.queryStringParameters);
+    if (error) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify(error),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    }
+    const { period, from, to } = event.queryStringParameters!;
+    const pks = getPKs(period as any, new Date(Number(from!)).toISOString(), new Date(Number(to!)).toISOString());
+    console.log(pks);
 }
 
 function getDynamoDbItem(timestampMs: number, data: any) {
@@ -228,4 +251,4 @@ function getWeekNumber(timestampMs: number): number {
 
 
 
-export { postData, aggregateData };
+export { postData, aggregateData, getData };
