@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.518.0",
+    "@aws-sdk/lib-dynamodb": "^3.521.0",
+    "@types/aws-lambda": "^8.10.134",
+    "@types/node": "^20.11.20",
+    "joi": "^17.12.2",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.2",
+    "@tsconfig/node20": "^20.1.2"
+  },
+  "scripts": {
+    "deploy": "tsc && zip -r -q function.zip ./dist node_modules && terraform apply && rm function.zip"
+  }
+}

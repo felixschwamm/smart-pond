@@ -1,0 +1,7 @@
+.terraform
+dist
+node_modules
+.terraform.lock.hcl
+backend-terraform/function.zip
+backend-terraform/terraform.tfstate
+backend-terraform/terraform.tfstate.backup
