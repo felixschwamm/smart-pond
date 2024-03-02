@@ -23,8 +23,8 @@ const aggregateDataEventSchema = Joi.object({
 
 const getValuesEventSchema = Joi.object({
     period: Joi.string().valid("MONTH", "YEAR", "WEEK", "DAY").required(),
-    from: Joi.number().required(),
-    to: Joi.number().required()
+    from: Joi.date().iso().required(),
+    to: Joi.date().iso().required()
 }).unknown(true);
 
 type AggregatedData = { [key: string]: number };
@@ -106,7 +106,7 @@ async function getData(event: APIGatewayEvent) {
         }
     }
     const { period, from, to } = event.queryStringParameters!;
-    const pks = getPKs(period as any, new Date(Number(from!)).toISOString(), new Date(Number(to!)).toISOString());
+    const pks = getPKs(period as any, from!, to!);
     console.log(pks);
 }
 

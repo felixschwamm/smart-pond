@@ -40,3 +40,5 @@ export function getPKs(period: Period, startDate: string, endDate: string): stri
 
     return result;
 }
+
+console.log(getPKs('WEEK', '2020-01-01', '2021-01-05'));
